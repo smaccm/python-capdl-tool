@@ -16,8 +16,8 @@ be used internally.
 from Cap import Cap
 from Object import ASIDPool, PageDirectory, Frame, PageTable
 from Spec import Spec
-from util import page_table_vaddr, page_table_index, page_index, round_down, \
-    PAGE_SIZE
+from util import page_table_vaddr, page_table_index, page_index, round_down, page_table_coverage, \
+    PAGE_SIZE, ARM_SECTION_SIZE, IA32_4M_PAGE_SIZE
 import collections
 from weakref import ref
 
@@ -38,18 +38,20 @@ class PageCollection(object):
         self.infer_asid = infer_asid
         self._spec = lambda: None
 
-    def add_page(self, vaddr, read=False, write=False, execute=False):
+    def add_page(self, vaddr, read=False, write=False, execute=False, size=PAGE_SIZE):
         if vaddr not in self._pages:
             # Only create this page if we don't already have it.
             self._pages[vaddr] = {
                 'read':False, \
                 'write':False, \
                 'execute':False, \
+                'size':PAGE_SIZE, \
             }
         # Now upgrade this page's permissions to meet our current requirements.
         self._pages[vaddr]['read'] |= read
         self._pages[vaddr]['write'] |= write
         self._pages[vaddr]['execute'] |= execute
+        self._pages[vaddr]['size'] = size
 
     def add_pages(self, base, limit, read=False, write=False, execute=False):
         '''Optimised, batched version of calling add_page in a loop. Prefer
@@ -118,12 +120,18 @@ class PageCollection(object):
         pts = {}
         pt_counter = 0
         for page_counter, page_vaddr in enumerate(self._pages):
-            frame = Frame('frame_%s_%s' % (self.name, page_counter))
+            frame = Frame('frame_%s_%s' % (self.name, page_counter), self._pages[page_vaddr]['size'])
             spec.add_object(frame)
             page_cap = Cap(frame, read=self._pages[page_vaddr]['read'], \
                 write=self._pages[page_vaddr]['write'], \
                 grant=self._pages[page_vaddr]['execute'])
+
             pt_vaddr = page_table_vaddr(self.arch, page_vaddr)
+            if self._pages[page_vaddr]['size'] >= page_table_coverage(self.arch):
+                pt_counter += 1
+                pd[page_table_index(self.arch, pt_vaddr)] = page_cap
+                continue
+
             if pt_vaddr not in pts:
                 pts[pt_vaddr] = PageTable('pt_%s_%s' % (self.name, pt_counter))
                 pt_counter += 1

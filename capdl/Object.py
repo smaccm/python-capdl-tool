@@ -85,7 +85,8 @@ class Frame(Object):
             return hex(val).rstrip('L')
         return '%(name)s = frame (%(size)s%(maybepaddr)s)' % {
             'name':self.name,
-            'size':'4k' if self.size == 4096 else str(self.size) + 'k',
+            'size':'%s' % (str(self.size / 1024) + 'k') if self.size % (1024 * 1024) != 0 \
+                else str(self.size / 1024 / 1024) + 'M',
             'maybepaddr':(', paddr: %s' % reliable_hex(self.paddr)) if self.paddr != 0 else '',
         }
 
