@@ -12,9 +12,26 @@
 Various internal utility functions. Pay no mind to this file.
 """
 
+import os
+
 # Size of a frame and page (applies to all architectures)
 FRAME_SIZE = 4096 # bytes
 PAGE_SIZE = 4096 # bytes
+
+# ARM objects, hypervisor mode doubles the section size.
+ARM_LARGE_PAGE_SIZE = 64 * 1024           #64K
+if os.environ.get('ARM_HYP', '') == '1':
+    ARM_SECTION_SIZE = 2 * 1024 * 1024            #1M
+    ARM_SUPER_SECTION_SIZE = 2 * 16 * 1024 * 1024 #16M
+else:
+    ARM_SECTION_SIZE = 1024 * 1024            #1M
+    ARM_SUPER_SECTION_SIZE = 16 * 1024 * 1024 #16M
+
+# IA32 objects
+IA32_4M_PAGE_SIZE = 4 * 1024 * 1024       #4M
+
+# X86_64 objects(unsupported)
+X64_2M_PAGE_SIZE = 2 * 1024 * 1024        #2M
 
 def round_down(n, alignment=FRAME_SIZE):
     """
@@ -30,8 +47,12 @@ def page_table_coverage(arch):
         # On IA32 a page table covers 4M
         return 4 * 1024 * 1024
     elif arch.lower() in ['arm', 'arm11']:
-        # On ARM a page table covers 1M
-        return 1 * 1024 * 1024
+        # On ARM a page table usually covers 1M,
+        # ARM hypervisor mode covers 2M
+        if os.environ.get('ARM_HYP', '') == '1':
+            return 2 * 1024 * 1024
+        else:
+            return 1 * 1024 * 1024
     else:
         # NB: If you end up in this branch while dealing with an ELF that you
         # are reasonably sure is ARM, chances are you don't have a recent
