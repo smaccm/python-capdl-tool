@@ -14,6 +14,8 @@ from Object import Frame, PageTable, PageDirectory, CNode, Endpoint, \
 from Spec import Spec
 from Cap import Cap
 
+import os;
+
 seL4_UntypedObject = 0
 seL4_TCBObject = 1
 seL4_EndpointObject = 2
@@ -100,9 +102,15 @@ class ObjectAllocator(object):
         elif type == seL4_ARM_LargePageObject:
             o = Frame(name, 64 * 1024, **kwargs) # 64K
         elif type == seL4_ARM_SectionObject:
-            o = Frame(name, 1024 * 1024, **kwargs) # 1M
+            if os.environ.get('ARM_HYP', '') == '1':
+                o = Frame(name, 1024 * 1024 * 2, **kwargs) # 2M
+            else:
+                o = Frame(name, 1024 * 1024, **kwargs) # 1M
         elif type == seL4_ARM_SuperSectionObject:
-            o = Frame(name, 16 * 1024 * 1024, **kwargs) # 16M
+            if os.environ.get('ARM_HYP', '') == '1':
+                o = Frame(name, 32 * 1024 * 1024, **kwargs) # 32M
+            else:
+                o = Frame(name, 16 * 1024 * 1024, **kwargs) # 16M
         elif type == seL4_IA32_PageTableObject or type == seL4_ARM_PageTableObject:
             o = PageTable(name)
         elif type in [seL4_IA32_PageDirectoryObject,
