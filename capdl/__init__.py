@@ -12,7 +12,7 @@ from Cap import Cap
 from ELF import ELF
 from Object import Frame, PageTable, PageDirectory, ASIDPool, CNode, Endpoint, \
                    AsyncEndpoint, TCB, Untyped, IOPorts, IODevice, IOPageTable, \
-                   IRQ
+                   IRQ, SC
 from Spec import Spec
 from Allocator import seL4_UntypedObject, seL4_TCBObject, seL4_EndpointObject, \
     seL4_AsyncEndpointObject, seL4_CapTableObject, seL4_ARM_SmallPageObject, \
@@ -20,6 +20,6 @@ from Allocator import seL4_UntypedObject, seL4_TCBObject, seL4_EndpointObject, \
     seL4_IA32_PageTableObject, seL4_IA32_PageDirectoryObject, \
     seL4_IA32_IOPageTableObject, seL4_CanRead, seL4_CanWrite, seL4_CanGrant, \
     seL4_AllRights, ObjectAllocator, CSpaceAllocator, seL4_FrameObject, \
-    seL4_PageDirectoryObject
+    seL4_PageDirectoryObject, seL4_SchedContextObject, seL4_SchedControlObject
 from PageCollection import PageCollection, create_address_space
 from util import page_table_vaddr, page_table_index, page_index, page_vaddr

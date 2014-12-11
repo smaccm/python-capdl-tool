@@ -133,19 +133,23 @@ class AsyncEndpoint(Object):
 
 class TCB(ContainerObject):
     def __init__(self, name, ipc_buffer_vaddr=0x0, ip=0x0, sp=0x0, elf=None, \
-            prio=254, init=None, domain=None):
+            prio=254, max_prio=254, crit=3, max_crit=3, init=None, domain=None):
         super(TCB, self).__init__(name)
         self.addr = ipc_buffer_vaddr
         self.ip = ip
         self.sp = sp
         self.elf = elf or ''
         self.prio = prio
+	self.max_prio = max_prio
+	self.crit = crit
+	self.max_crit = max_crit
         self.init = init or []
         self.domain = domain
 
     def __repr__(self):
         # XXX: Assumes 32-bit pointers
-        s = '%(name)s = tcb (addr: 0x%(addr)0.8x, ip: 0x%(ip)0.8x, sp: 0x%(sp)0.8x, elf: %(elf)s, prio: %(prio)s, init: %(init)s' % self.__dict__
+        s = '%(name)s = tcb (addr: 0x%(addr)0.8x, ip: 0x%(ip)0.8x, sp: 0x%(sp)0.8x, elf: %(elf)s, prio: %(prio)s, \
+		max_prio: %(max_prio)s, crit: %(crit)s, max_crit: %(max_crit)s, init: %(init)s' % self.__dict__
         if self.domain is not None:
             s += ', dom: %d' % self.domain
         s += ')'
@@ -214,3 +218,16 @@ class IRQ(ContainerObject):
 class VCPU(Object):
     def __repr__(self):
         return '%s = vcpu' % self.name
+
+class SC(Object):
+    def __init__(self, name, period=0x0, deadline=0x0, exec_req=0x0, flags=0x0):
+        super(SC, self).__init__(name)
+        self.period = period
+	self.deadline = deadline
+	self.exec_req = exec_req
+	self.flags = flags
+
+    def __repr__(self):
+        s = '%(name)s = sc (period: %(period)s, deadline: %(deadline)s, exec_req: %(exec_req)s, flags: %(flags)s)' % self.__dict__
+        return s
+

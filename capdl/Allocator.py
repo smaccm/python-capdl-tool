@@ -10,7 +10,7 @@
 
 from Object import Frame, PageTable, PageDirectory, CNode, Endpoint, \
     AsyncEndpoint, TCB, Untyped, IOPageTable, Object, IRQ, IOPorts, IODevice, \
-    VCPU
+    VCPU, SC
 from Spec import Spec
 from Cap import Cap
 
@@ -40,6 +40,9 @@ seL4_FrameObject = 25
 seL4_IRQControl = 26
 
 seL4_PageDirectoryObject = 30
+
+seL4_SchedContextObject = 31
+seL4_SchedControlObject = 32
 
 seL4_CanRead = 1
 seL4_CanWrite = 2
@@ -130,6 +133,8 @@ class ObjectAllocator(object):
                 o.set_endpoint(kwargs['aep'])
             else:
                 raise ValueError
+	elif type == seL4_SchedContextObject:
+	    o = SC(name)
         else:
             raise Exception('Invalid object type %s' % type)
         self.spec.add_object(o)
