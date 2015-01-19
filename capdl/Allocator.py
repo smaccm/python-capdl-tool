@@ -10,9 +10,11 @@
 
 from Object import Frame, PageTable, PageDirectory, CNode, Endpoint, \
     AsyncEndpoint, TCB, Untyped, IOPageTable, Object, IRQ, IOPorts, IODevice, \
-    VCPU
+    VCPU, ASIDPool
 from Spec import Spec
 from Cap import Cap
+
+import os;
 
 seL4_UntypedObject = 0
 seL4_TCBObject = 1
@@ -40,6 +42,7 @@ seL4_FrameObject = 25
 seL4_IRQControl = 26
 
 seL4_PageDirectoryObject = 30
+seL4_ASID_Pool = 31
 
 seL4_CanRead = 1
 seL4_CanWrite = 2
@@ -100,9 +103,15 @@ class ObjectAllocator(object):
         elif type == seL4_ARM_LargePageObject:
             o = Frame(name, 64 * 1024, **kwargs) # 64K
         elif type == seL4_ARM_SectionObject:
-            o = Frame(name, 1024 * 1024, **kwargs) # 1M
+            if os.environ.get('ARM_HYP', '') == '1':
+                o = Frame(name, 1024 * 1024 * 2, **kwargs) # 2M
+            else:
+                o = Frame(name, 1024 * 1024, **kwargs) # 1M
         elif type == seL4_ARM_SuperSectionObject:
-            o = Frame(name, 16 * 1024 * 1024, **kwargs) # 16M
+            if os.environ.get('ARM_HYP', '') == '1':
+                o = Frame(name, 32 * 1024 * 1024, **kwargs) # 32M
+            else:
+                o = Frame(name, 16 * 1024 * 1024, **kwargs) # 16M
         elif type == seL4_IA32_PageTableObject or type == seL4_ARM_PageTableObject:
             o = PageTable(name)
         elif type in [seL4_IA32_PageDirectoryObject,
@@ -130,6 +139,8 @@ class ObjectAllocator(object):
                 o.set_endpoint(kwargs['aep'])
             else:
                 raise ValueError
+        elif type == seL4_ASID_Pool:
+            o = ASIDPool(name)
         else:
             raise Exception('Invalid object type %s' % type)
         self.spec.add_object(o)
